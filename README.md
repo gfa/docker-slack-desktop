@@ -1,12 +1,12 @@
-This project is fully inspired of [sameersbn](https://github.com/sameersbn) [Skype](https://github.com/sameersbn/docker-skype)'s containerization.
+This project is fully inspired of [mdouchement](https://github.com/mdouchement) [zoom.us](https://github.com/gfa01/slack-desktop)'s containerization.
 
-# mdouchement/zoom-us
+# gfa/docker-slack-desktop
 
 # Introduction
 
-`Dockerfile` to create a [Docker](https://www.docker.com/) container image with [Zoom](http://www.zoom.us) for Linux with support for audio/video calls.
+`Dockerfile` to create a [Docker](https://www.docker.com/) container image with [Slack](http://www.slack.com) for Linux with support for audio/video calls.
 
-The image uses [X11](http://www.x.org) and [Pulseaudio](http://www.freedesktop.org/wiki/Software/PulseAudio/) unix domain sockets on the host to enable audio/video support in Zoom. These components are available out of the box on pretty much any modern linux distribution.
+The image uses [X11](http://www.x.org) and [Pulseaudio](http://www.freedesktop.org/wiki/Software/PulseAudio/) unix domain sockets on the host to enable audio/video support in Slack. These components are available out of the box on pretty much any modern linux distribution.
 
 ## Contributing
 
@@ -19,16 +19,16 @@ If you find this image useful here's how you can help:
 
 ## Installation
 
-Automated builds of the image are available on [Dockerhub](https://hub.docker.com/r/mdouchement/zoom-us) and is the recommended method of installation.
+Automated builds of the image are available on [Dockerhub](https://hub.docker.com/r/gfa01/slack-desktop) and is the recommended method of installation.
 
 ```bash
-docker pull mdouchement/zoom-us:latest
+docker pull gfa01/slack-desktop:latest
 ```
 
 Alternatively you can build the image yourself.
 
 ```bash
-docker build -t mdouchement/zoom-us github.com/mdouchement/docker-zoom-us
+docker build -t gfa01/slack-desktop github.com/gfa/docker-slack-desktop
 ```
 
 With the image locally available, install the wrapper scripts using:
@@ -36,14 +36,14 @@ With the image locally available, install the wrapper scripts using:
 ```bash
 docker run -it --rm \
   --volume /usr/local/bin:/target \
-  mdouchement/zoom-us:latest install
+  gfa01/slack-desktop:latest install
 ```
 
-This will install a wrapper script to launch `zoom`.
+This will install a wrapper script to launch `slack`.
 
 > **Note**
 >
-> If Zoom is installed on the the host then the host binary is launched instead of starting a Docker container. To force the launch of Zoom in a container use the `zoom-us-wrapper` script. For example, `zoom-us-wrapper zoom` will launch Zoom inside a Docker container regardless of whether it is installed on the host or not.
+> If Slack is installed on the host then the host binary is launched instead of starting a Docker container. To force the launch of Slack in a container use the `slack-desktop-wrapper` script. For example, `slack-desktop-wrapper slack` will launch Slack inside a Docker container regardless of whether it is installed on the host or not.
 
 ## How it works
 
@@ -51,11 +51,10 @@ The wrapper scripts volume mount the X11 and pulseaudio sockets in the launcher 
 
 When the image is launched the following directories are mounted as volumes
 
-- `${HOME}/.zoom`
-- `${HOME}/.config`
+- `${HOME}/.config/Slack`
 - `XDG_DOWNLOAD_DIR` or if it is missing `${HOME}/Downloads`
 
-This makes sure that your profile details are stored on the host and files received via Zoom are available on your host in the appropriate download directory.
+This makes sure that your profile details are stored on the host and files received via Slack are available on your host in the appropriate download directory.
 
 
 # Maintenance
@@ -67,7 +66,7 @@ To upgrade to newer releases:
   1. Download the updated Docker image:
 
   ```bash
-  docker pull mdouchement/zoom-us:latest
+  docker pull gfa01/slack-desktop:latest
   ```
 
   2. Run `install` to make sure the host scripts are updated.
@@ -75,7 +74,7 @@ To upgrade to newer releases:
   ```bash
   docker run -it --rm \
     --volume /usr/local/bin:/target \
-    mdouchement/zoom-us:latest install
+    gfa01/slack-desktop:latest install
   ```
 
 ## Uninstallation
@@ -83,7 +82,7 @@ To upgrade to newer releases:
 ```bash
 docker run -it --rm \
   --volume /usr/local/bin:/target \
-  mdouchement/zoom-us:latest uninstall
+  gfa01/slack-desktop:latest uninstall
 ```
 
 ## Shell Access
@@ -91,5 +90,5 @@ docker run -it --rm \
 For debugging and maintenance purposes you may want access the containers shell. If you are using Docker version `1.3.0` or higher you can access a running containers shell by starting `bash` using `docker exec`:
 
 ```bash
-docker exec -it zoom bash
+docker exec -it slack-desktop bash
 ```

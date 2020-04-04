@@ -1,75 +1,74 @@
 #!/bin/bash
 set -e
+set -x
 
 USER_UID=${USER_UID:-1000}
 USER_GID=${USER_GID:-1000}
 
-ZOOM_US_USER=zoom
+SLACK_DESKTOP_USER=slack
 
-install_zoom_us() {
-  echo "Installing zoom-us-wrapper..."
-  install -m 0755 /var/cache/zoom-us/zoom-us-wrapper /target/
-  echo "Installing zoom-us..."
-  ln -sf zoom-us-wrapper /target/zoom
+install_slack_desktop() {
+  echo "Installing slack-desktop-wrapper..."
+  install -m 0755 /var/cache/slack-desktop/slack-desktop-wrapper /target/
+  echo "Installing slack-desktop..."
+  ln -sf slack-desktop-wrapper /target/slack
 }
 
-uninstall_zoom_us() {
-  echo "Uninstalling zoom-us-wrapper..."
-  rm -rf /target/zoom-us-wrapper
-  echo "Uninstalling zoom-us..."
-  rm -rf /target/zoom
+uninstall_slack_desktop() {
+  echo "Uninstalling slack-desktop-wrapper..."
+  rm -rf /target/slack-desktop-wrapper
+  echo "Uninstalling slack-desktop..."
+  rm -rf /target/slack
 }
 
 create_user() {
   # create group with USER_GID
-  if ! getent group ${ZOOM_US_USER} >/dev/null; then
-    groupadd -f -g ${USER_GID} ${ZOOM_US_USER} >/dev/null 2>&1
+  if ! getent group ${SLACK_DESKTOP_USER} >/dev/null; then
+    groupadd -f -g ${USER_GID} ${SLACK_DESKTOP_USER} >/dev/null 2>&1
   fi
 
   # create user with USER_UID
-  if ! getent passwd ${ZOOM_US_USER} >/dev/null; then
+  if ! getent passwd ${SLACK_DESKTOP_USER} >/dev/null; then
     adduser --disabled-login --uid ${USER_UID} --gid ${USER_GID} \
-      --gecos 'ZoomUs' ${ZOOM_US_USER} >/dev/null 2>&1
+      --gecos 'Slack' ${SLACK_DESKTOP_USER} >/dev/null 2>&1
   fi
-  chown ${ZOOM_US_USER}:${ZOOM_US_USER} -R /home/${ZOOM_US_USER}
-  adduser ${ZOOM_US_USER} sudo
+  chown ${SLACK_DESKTOP_USER}:${SLACK_DESKTOP_USER} -R /home/${SLACK_DESKTOP_USER}
 }
 
 grant_access_to_video_devices() {
-  for device in /dev/video*
-  do
+  for device in /dev/video*; do
     if [[ -c $device ]]; then
       VIDEO_GID=$(stat -c %g $device)
       VIDEO_GROUP=$(stat -c %G $device)
       if [[ ${VIDEO_GROUP} == "UNKNOWN" ]]; then
-        VIDEO_GROUP=zoomusvideo
+        VIDEO_GROUP=slackvideo
         groupadd -g ${VIDEO_GID} ${VIDEO_GROUP}
       fi
-      usermod -a -G ${VIDEO_GROUP} ${ZOOM_US_USER}
+      usermod -a -G ${VIDEO_GROUP} ${SLACK_DESKTOP_USER}
       break
     fi
   done
 }
 
-launch_zoom_us() {
-  cd /home/${ZOOM_US_USER}
-  exec sudo -HEu ${ZOOM_US_USER} PULSE_SERVER=/run/pulse/native QT_GRAPHICSSYSTEM="native" $@
+launch_slack_desktop() {
+  cd /home/${SLACK_DESKTOP_USER}
+  exec sudo -HEu ${SLACK_DESKTOP_USER} PULSE_SERVER=/run/pulse/native QT_GRAPHICSSYSTEM="native" $@
 }
 
 case "$1" in
-  install)
-    install_zoom_us
-    ;;
-  uninstall)
-    uninstall_zoom_us
-    ;;
-  zoom)
-    create_user
-    grant_access_to_video_devices
-    echo "$1"
-    launch_zoom_us $@
-    ;;
-  *)
-    exec $@
-    ;;
+install)
+  install_slack_desktop
+  ;;
+uninstall)
+  uninstall_slack_desktop
+  ;;
+slack)
+  create_user
+  grant_access_to_video_devices
+  echo "$1"
+  launch_slack_desktop $@
+  ;;
+*)
+  exec $@
+  ;;
 esac

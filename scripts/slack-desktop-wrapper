@@ -1,10 +1,10 @@
 #!/bin/bash
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-ZOOM_US_USER=zoom
+SLACK_DESKTOP_USER=slack
 
 # do we need to use sudo to start docker containers?
-( id -Gn | grep -q docker ) || SUDO=sudo
+(id -Gn | grep -q docker) || SUDO=sudo
 
 USER_UID=$(id -u)
 USER_GID=$(id -g)
@@ -14,24 +14,23 @@ XAUTH=/tmp/.docker.xauth
 
 DOWNLOAD_DIR=$(xdg-user-dir DOWNLOAD)
 if [ -z "${DOWNLOAD_DIR}" ]; then
-    DOWNLOAD_DIR="${HOME}/Downloads"
-fi;
+  DOWNLOAD_DIR="${HOME}/Downloads"
+fi
 
 list_commands() {
   echo ""
-  echo "Launch zoom-us using:"
-  echo "  zoom-us                     OR "
-  echo "  zoom-us-wrapper zoom-us"
+  echo "Launch slack-desktop using:"
+  echo "  slack-desktop                     OR "
+  echo "  slack-desktop-wrapper slack-desktop"
   echo ""
   exit 1
 }
 
-cleanup_stopped_zoom_us_instances(){
-  echo "Cleaning up stopped zoom-us instances..."
-  for c in $(${SUDO} docker ps -a -q)
-  do
+cleanup_stopped_slack_desktop_instances() {
+  echo "Cleaning up stopped slack-desktop instances..."
+  for c in $(${SUDO} docker ps -a -q); do
     image="$(${SUDO} docker inspect -f {{.Config.Image}} ${c})"
-    if [ "${image}" == "mdouchement/zoom-us:latest" ]; then
+    if [ "${image}" == "gfa01/slack-desktop:latest" ]; then
       running=$(${SUDO} docker inspect -f {{.State.Running}} ${c})
       if [ "${running}" != "true" ]; then
         ${SUDO} docker rm "${c}" >/dev/null
@@ -52,8 +51,7 @@ prepare_docker_volume_parameters() {
   touch ${XAUTH}
   xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
 
-  VOLUMES+=" --volume=${HOME}/.config:/home/${ZOOM_US_USER}/.config"
-  VOLUMES+=" --volume=${HOME}/.zoom:/home/${ZOOM_US_USER}/.zoom"
+  VOLUMES+=" --volume=${HOME}/.config/Slack:/home/${SLACK_DESKTOP_USER}/.config/Slack"
   VOLUMES+=" --volume=${XSOCK}:${XSOCK}"
   VOLUMES+=" --volume=${XAUTH}:${XAUTH}"
   VOLUMES+=" --volume=/run/user/${USER_UID}/pulse:/run/pulse"
@@ -62,8 +60,7 @@ prepare_docker_volume_parameters() {
 prepare_docker_device_parameters() {
   # enumerate video devices for webcam support
   VIDEO_DEVICES=
-  for device in /dev/video*
-  do
+  for device in /dev/video*; do
     if [ -c $device ]; then
       VIDEO_DEVICES="${VIDEO_DEVICES} --device $device:$device"
     fi
@@ -73,23 +70,23 @@ prepare_docker_device_parameters() {
 prog=$(basename $0)
 exec=$(which $prog)
 
-if [[ ${prog} == "zoom-us-wrapper" ]]; then
+if [[ ${prog} == "slack-desktop-wrapper" ]]; then
   case ${1} in
-    zoom)
-      prog=${1}
-      shift
-      ;;
-    *|help)
-      list_commands
-      exit 1
-      ;;
+  slack)
+    prog=${1}
+    shift
+    ;;
+  * | help)
+    list_commands
+    exit 1
+    ;;
   esac
 elif [[ -n ${exec} ]]; then
   # launch host binary if it exists
   exec ${exec} $@
 fi
 
-cleanup_stopped_zoom_us_instances
+cleanup_stopped_slack_desktop_instances
 prepare_docker_env_parameters
 prepare_docker_volume_parameters
 prepare_docker_device_parameters
@@ -100,5 +97,5 @@ ${SUDO} docker run -d \
   ${VIDEO_DEVICES} \
   --device /dev/dri \
   ${VOLUMES} \
-  ${ZOOM_EXTRA_DOCKER_ARGUMENTS} \
-  mdouchement/zoom-us:latest ${prog} $@ >/dev/null
+  ${SLACK_EXTRA_DOCKER_ARGUMENTS} \
+  gfa01/slack-desktop:latest ${prog} --no-sandbox $@ >/dev/null
