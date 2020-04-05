@@ -1,4 +1,4 @@
-FROM jgoerzen/debian-base-security:latest
+FROM debian:latest
 MAINTAINER gfa01
 
 
