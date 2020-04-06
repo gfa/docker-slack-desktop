@@ -55,6 +55,11 @@ prepare_docker_volume_parameters() {
   VOLUMES+=" --volume=${XSOCK}:${XSOCK}"
   VOLUMES+=" --volume=${XAUTH}:${XAUTH}"
   VOLUMES+=" --volume=/run/user/${USER_UID}/pulse:/run/pulse"
+
+  if [ -d "${HOME}/tmp" ]; then
+    VOLUMES+=" --volume=${HOME}/tmp:/home/${SLACK_DESKTOP_USER}/tmp"
+  fi
+
 }
 
 prepare_docker_device_parameters() {
